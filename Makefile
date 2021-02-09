@@ -9,9 +9,11 @@ TASS:=64tass --m65xx --nostart -Wall -Wno-implied-reg -q
 build:
 	mkdir -p "$(DEST)"
 
-	@$(MAKE) _assemble BUILD_TYPE=0 STEM=exmon2-2.02
-	@$(MAKE) _assemble BUILD_TYPE=1 STEM=exmon2-2.02-alt
-	@$(MAKE) _assemble BUILD_TYPE=2 STEM=exmon2-2.01
+	@$(MAKE) _assemble BUILD_TYPE=0 ELECTRON=0 STEM=exmon2-2.02
+	@$(MAKE) _assemble BUILD_TYPE=1 ELECTRON=0 STEM=exmon2-2.02-alt
+	@$(MAKE) _assemble BUILD_TYPE=2 ELECTRON=0 STEM=exmon2-2.01
+
+	@$(MAKE) _assemble BUILD_TYPE=0 ELECTRON=1 STEM=exmon2-2.02e
 
 	@echo
 
@@ -27,9 +29,12 @@ build:
 	@sha1sum orig/exmon2-2.01.rom "$(DEST)/exmon2-2.01.rom"
 	@echo
 
+	@ls -l "$(DEST)/exmon2-2.02e.rom"
+	@echo
+
 .PHONY:_assemble
 _assemble:
-	$(TASS) -D BUILD_TYPE=$(BUILD_TYPE) exmon2.s65 "-L$(DEST)/$(STEM).lst" "-o$(DEST)/$(STEM).lst" "-l$(DEST)/$(STEM).sym" "-o$(DEST)/$(STEM).rom"
+	$(TASS) -D BUILD_TYPE=$(BUILD_TYPE) -D ELECTRON=$(ELECTRON) exmon2.s65 "-L$(DEST)/$(STEM).lst" "-o$(DEST)/$(STEM).lst" "-l$(DEST)/$(STEM).sym" "-o$(DEST)/$(STEM).rom"
 
 ##########################################################################
 ##########################################################################
