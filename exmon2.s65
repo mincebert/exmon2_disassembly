@@ -43,9 +43,15 @@ end_with_ffs=true
 
 
                 .if ELECTRON==0
+
 key_toggle_mode=9		; TAB
+paging_reg=$fe30
+
                 .else
+
 key_toggle_mode=';'		; no TAB on Electron
+paging_reg=$fe05
+
                 .endif
 
 
@@ -300,7 +306,7 @@ breakpoint_msbs:
 breakpoint_contents:
                 .fill max_num_breakpoints
 rest:
-                .cerror *>=$f6,"workspace is too large"
+                .cerror *>=$f6,"workspace is too large: ", format("%x", *)
                 
                 ; there is more stuff here, but I don't yet know what!
                 ; At least a copy of $f6/$f7 at +$f6/+$f7, so those
@@ -1060,12 +1066,9 @@ loc_8569:
 		LDX	#$FF
 		BPL	loc_8570
 select_BASIC_ROM:
-		LDX	byte_24B	; ROM socket containing	BASIC (OSBYTE 187, AUG p195)
-
-loc_8570:				
-		STX	$f4
-		STX	$FE30
-		RTS
+		LDA	byte_24B	; ROM socket containing	BASIC (OSBYTE 187, AUG p195)
+loc_8570:
+        JMP select_ROM
 ; ---------------------------------------------------------------------------
 ;change ROM and call routine
 loc_8576:
@@ -1073,15 +1076,11 @@ loc_8576:
 		PHA
 loc_8578:
                 .if v201
-                lda $f4
-                sta $fe30
+        JSR select_ROM
                 .else
 		LDA	#$FF
-		STA	$f4
-		STA	$FE30
+		JSR select_ROM
                 .endif
-		PLA
-		PLP
 loc_8581:
 		JMP	basic_LOMEM
 ; ---------------------------------------------------------------------------
@@ -1108,17 +1107,24 @@ select_exmon2_rom:
 		PHA
 loc_859D:
 		LDA	#$FF
-		STA	$f4
-		STA	$FE30
-		PLA
-		PLP
-		RTS
+		JMP select_ROM
 ; ---------------------------------------------------------------------------
 loc_85A7:
 		JSR	loc_8570
 		STA	(workspace_pointer),Y
 loc_85AC:
 		JMP	loc_8569
+select_ROM:
+		.if ELECTRON
+		CMP #$08
+		BCS select_ROM_real
+		.endif
+select_ROM_real:
+        STA $f4
+		STA paging_reg
+		PLA
+		PLP
+		RTS
                 .here
 workspace_code_end:
 
@@ -8314,15 +8320,15 @@ loc_B016:
 		TAY
 		LDA	$f4
 		ORA	#$80       ; set the ANDY bit
-		STA	$f4
-		STA	$FE30
+		STA $f4
+		STA paging_reg
 		TYA
 		LDY	#0
 		STA	(workspace_pointer),Y
 		LDA	$f4
 		AND	#$7F       ; unset the ANDY bit
-		STA	$f4
-		STA	$FE30
+		STA $f4
+		STA paging_reg
 		RTS
 
 
